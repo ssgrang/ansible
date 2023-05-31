@@ -1,0 +1,97 @@
+---
+
+- hosts: fedora
+  become: true
+  tasks:
+
+  - name: update repository index for fedora vm's
+    dnf:
+      update_cache: yes
+      update_only: true
+
+  - name: Uninstall old versions
+    dnf:
+      name: ['docker', 'docker-client', 'docker-client-latest', 'docker-common', 'docker-latest', 'docker-latest-logrotate', 'docker-logrotate', 'docker-selinux', 'docker-engine-selinux', 'docker-engine']
+      state: absent
+
+  - name: Set up the repository
+    dnf:
+      name: dnf-plugins-core
+      state: latest
+      update_cache: yes
+
+  - name: Add Docker Repository
+    shell: "dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo"
+
+  - name: install docker on fedora vm's
+    dnf:
+      name: ['docker-ce', 'docker-ce-cli', 'containerd.io', 'docker-buildx-plugin', 'docker-compose-plugin']
+      state: latest
+      update_cache: yes
+
+  - name: systemctl start docker
+    ansible.builtin.systemd:
+      name: docker
+      enabled: true
+      state: started
+
+  # sudo usermod -aG docker "sartaj"
+  - name: Add remote "sartaj" user to "docker" group
+    user:
+      name: sartaj
+      group: docker
+      append: yes
+
+- hosts: ubuntu
+  become: true
+  tasks:
+  - name: update repository index for ubuntu vm's & install aptitude
+    apt:
+      name: aptitude
+      state: latest
+      update_cache: yes
+
+  - name: Install required system packages
+    apt:
+      pkg:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - python3-pip
+        - virtualenv
+        - python3-setuptools
+      state: latest
+      update_cache: true
+
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Update apt and install docker-ce
+    apt:
+      name: docker-ce
+      state: latest
+      update_cache: true
+
+  - name: Install Docker Module for Python
+    pip:
+      name: docker
+
+  - name: Create "docker" group
+    group:
+      name: docker
+      state: present
+
+  # sudo usermod -aG docker "sartaj"
+  - name: Add remote "sartaj" user to "docker" group
+    user:
+      name: sartaj
+      group: docker
+      append: yes
