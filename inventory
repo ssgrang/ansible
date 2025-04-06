@@ -1,12 +1,13 @@
 [fedoraHost]
-fileServer ansible_host=192.168.1.55 ansible_user=sartaj
+# fileServer ansible_host=192.168.1.55 ansible_user=sartaj
 
 [fedora]
-fedora38 ansible_host=192.168.1.235
+fedora41 ansible_host=192.168.124.180
 
 [ubuntu]
-ubuntu_vm1 ansible_host=192.168.1.231
-ubuntuClone ansible_host=192.168.1.232
+ubuntu24_vm1 ansible_host=192.168.124.35
+ubuntu22.04  ansible_host=192.168.1.166
+gcp_ubuntu   ansible_host=35.211.235.224
 
 [vm:children]
 fedora

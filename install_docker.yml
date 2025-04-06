@@ -9,19 +9,14 @@
       update_cache: yes
       update_only: true
 
-  - name: Uninstall old versions
-    dnf:
-      name: ['docker', 'docker-client', 'docker-client-latest', 'docker-common', 'docker-latest', 'docker-latest-logrotate', 'docker-logrotate', 'docker-selinux', 'docker-engine-selinux', 'docker-engine']
-      state: absent
-
-  - name: Set up the repository
+  - name: Ensure dnf-plugins-core is installed
     dnf:
       name: dnf-plugins-core
       state: latest
       update_cache: yes
 
   - name: Add Docker Repository
-    shell: "dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo"
+    shell: "dnf config-manager addrepo --overwrite --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo"
 
   - name: install docker on fedora vm's
     dnf:
@@ -29,7 +24,7 @@
       state: latest
       update_cache: yes
 
-  - name: systemctl start docker
+  - name: Ensure Docker service is started and enabled on boot
     ansible.builtin.systemd:
       name: docker
       enabled: true
@@ -39,7 +34,7 @@
   - name: Add remote "sartaj" user to "docker" group
     user:
       name: sartaj
-      group: docker
+      groups: docker
       append: yes
 
 - hosts: ubuntu
@@ -76,14 +71,21 @@
 
   - name: Update apt and install docker-ce
     apt:
-      name: docker-ce
+      name: 
+        - docker-ce             # Docker Engine
+        - docker-ce-cli         # Docker Command Line Interface
+        - containerd.io         # Containerd runtime
+        - docker-buildx-plugin  # Buildx plugin
+        - docker-compose-plugin # Docker Compose V2 plugin
       state: latest
       update_cache: true
 
-  - name: Install Docker Module for Python
-    pip:
+  - name: Ensure Docker service is started and enabled on boot
+    ansible.builtin.systemd:
       name: docker
-
+      state: started
+      enabled: yes
+        
   - name: Create "docker" group
     group:
       name: docker
@@ -93,5 +95,5 @@
   - name: Add remote "sartaj" user to "docker" group
     user:
       name: sartaj
-      group: docker
+      groups: docker
       append: yes
